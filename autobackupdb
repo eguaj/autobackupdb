@@ -1,0 +1,42 @@
+#!/bin/bash
+
+BACKUP_DIR="/var/autobackupdb"
+GZIP="-9"
+
+set -e
+shopt -s nullglob
+
+export GZIP
+cd "$BACKUP_DIR"
+
+which pg_dump > /dev/null
+if [ $? -eq 0 ]; then
+	DB_LIST=( $(su postgres -c 'psql -tA -c "SELECT datname FROM pg_database"') )
+	for DBNAME in "${DB_LIST[@]}"; do
+		if [ "$DBNAME" = "template0" ]; then
+			continue
+		fi
+
+		printf "* Dumping pgsql '%s'... " "$DBNAME"
+		TMPDB=$(mktemp "$BACKUP_DIR/tmp.$DBNAME.XXXXXX")
+		su postgres -c "pg_dump \"$DBNAME\"" | gzip > "$TMPDB"
+		mv "$TMPDB" "$BACKUP_DIR/pgsql.$DBNAME.dump.gz"
+		printf "Done.\n"
+	done
+fi
+
+which mysql > /dev/null
+if [ $? -eq 0 ]; then
+	DB_LIST=( $(mysql -Bse 'show databases') )
+	for DBNAME in "${DB_LIST[@]}"; do
+		if [ "$DBNAME" = "information_schema" ]; then
+			continue
+		fi
+
+		printf "* Dumping mysql '%s'... " "$DBNAME"
+		TMPDB=$(mktemp "$BACKUP_DIR/tmp.$DBNAME.XXXXXX")
+		mysqldump "$DBNAME" | gzip > "$TMPDB"
+		mv "$TMPDB" "$BACKUP_DIR/mysql.$DBNAME.dump.gz"
+		printf "Done.\n"
+	done
+fi
