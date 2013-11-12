@@ -29,13 +29,13 @@ which mysql > /dev/null
 if [ $? -eq 0 ]; then
 	DB_LIST=( $(mysql -Bse 'show databases') )
 	for DBNAME in "${DB_LIST[@]}"; do
-		if [ "$DBNAME" = "information_schema" ]; then
+		if [ "$DBNAME" = "information_schema" -o "$DBNAME" = "performance_schema" ]; then
 			continue
 		fi
 
 		printf "* Dumping mysql '%s'... " "$DBNAME"
 		TMPDB=$(mktemp "$BACKUP_DIR/tmp.$DBNAME.XXXXXX")
-		mysqldump "$DBNAME" | gzip > "$TMPDB"
+		mysqldump --events "$DBNAME" | gzip > "$TMPDB"
 		mv "$TMPDB" "$BACKUP_DIR/mysql.$DBNAME.dump.gz"
 		printf "Done.\n"
 	done
