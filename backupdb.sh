@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BACKUP_DIR="/var/autobackupdb"
+BACKUP_DIR="/var/backupdb"
 
 shopt -s nullglob
 set -o pipefail
@@ -105,6 +105,21 @@ function backup_mongo {
 	return $GLOBAL_RET
 }
 
+function backup_local {
+	local GLOBAL_RET=0
+	if [ -x "/usr/local/bin/local-backup" ]; then
+		printf "* Running local-backup... "
+		/usr/local/bin/local-backup backup
+		if [ $? -ne 0 ]; then
+			printf "Error: local-backup failed!\n"
+			GLOBAL_RET=1
+		else
+			printf "Done.\n"
+		fi
+	fi
+	return $GLOBAL_RET
+}
+
 function main {
 	local RET=0
 
@@ -125,6 +140,9 @@ function main {
 	(( RET = RET || $? ))
 
 	backup_mongo
+	(( RET = RET || $? ))
+
+	backup_local
 	(( RET = RET || $? ))
 
 	if [ $RET -ne 0 ]; then
