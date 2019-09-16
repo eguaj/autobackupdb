@@ -129,6 +129,9 @@ function main {
 		return 1
 	fi
 
+	if [ -z "${GZIP}" ]; then
+		export GZIP="--rsyncable"
+	fi
 
 	backup_dpkg_list
 	(( RET = RET || $? ))
