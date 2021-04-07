@@ -11,6 +11,24 @@ function backup_dpkg_list {
 	dpkg -l > "${BACKUP_DIR}/dpkg.list"
 }
 
+function backup_rpm_list {
+	rpm -qa | sort > "${BACKUP_DIR}/rpm.list"
+}
+
+function backup_yum_list {
+	yum list installed --quiet > "${BACKUP_DIR}/yum.list"
+}
+
+function backup_pkg_list {
+	if command -v dpkg > /dev/null; then
+		backup_dpkg_list
+	elif command -v yum > /dev/null; then
+		backup_rpm_list
+	elif command -v rpm > /dev/null; then
+		backup_yum_list
+	fi
+}
+
 function backup_pg {
 	if ! command -v pg_dump > /dev/null; then
 		return 0
@@ -135,7 +153,7 @@ function main {
 		export GZIP="--rsyncable"
 	fi
 
-	backup_dpkg_list
+	backup_pkg_list
 	(( RET = RET || $? ))
 
 	backup_pg
