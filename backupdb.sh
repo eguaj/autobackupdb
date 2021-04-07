@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# shellcheck disable=SC2181
+
 BACKUP_DIR="/var/backupdb"
 
 shopt -s nullglob
@@ -10,11 +12,11 @@ function backup_dpkg_list {
 }
 
 function backup_pg {
-	which pg_dump > /dev/null
-	if [ $? -ne 0 ]; then
+	if ! command -v pg_dump > /dev/null; then
 		return 0
 	fi
-	local DB_LIST=( $(su postgres -c "psql -tA -c \"SELECT datname FROM pg_database WHERE datname "'!'"~ E'(template|bench)'\"") )
+	local DB_LIST
+	mapfile -t DB_LIST < <(su postgres -c "psql -tA -c \"SELECT datname FROM pg_database WHERE datname "'!'"~ E'(template|bench)'\"")
 	if [ $? -ne 0 ]; then
 		printf "Error: could not list PostgreSQL's databases!\n"
 		return 1
@@ -40,18 +42,18 @@ function backup_pg {
 }
 
 function backup_mysql {
-	which mysql > /dev/null
-	if [ $? -ne 0 ]; then
+	if ! command -v mysql > /dev/null; then
 		return 0
 	fi
-	local DB_LIST=( $(mysql -Bse 'show databases') )
+	local DB_LIST
+	mapfile -t DB_LIST < <(mysql -Bse 'show databases')
 	if [ $? -ne 0 ]; then
 		printf "Error: could not list MySQL's databases!\n"
 		return 1
 	fi
 	local GLOBAL_RET=0
 	for DBNAME in "${DB_LIST[@]}"; do
-		if [ "${DBNAME}" = "information_schema" -o "${DBNAME}" = "performance_schema" ]; then
+		if [ "${DBNAME}" = "information_schema" ] || [ "${DBNAME}" = "performance_schema" ]; then
 			continue
 		fi
 
@@ -74,12 +76,12 @@ function backup_mysql {
 }
 
 function backup_mongo {
-	which mongo > /dev/null
-	if [ $? -ne 0 ]; then
+	if ! command -v mongo > /dev/null; then
 		return 0
 	fi
 	local DB_LIST
-	DB_LIST=( $(mongo --quiet --eval  "printjson(db.adminCommand('listDatabases'))" | php -r '$r=json_decode(file_get_contents("php://stdin"),true);foreach($r["databases"]as$d){printf("%s\n",$d["name"]);};') )
+	# shellcheck disable=SC2016
+	mapfile -t DB_LIST < <(mongo --quiet --eval  "printjson(db.adminCommand('listDatabases'))" | php -r '$r=json_decode(file_get_contents("php://stdin"),true);foreach($r["databases"]as$d){printf("%s\n",$d["name"]);};')
 	if [ $? -ne 0 ]; then
 		printf "Error: could not list Mongo's databases!\n"
 		return 1
@@ -156,4 +158,3 @@ function main {
 
 main "$@"
 
-# shellcheck disable=SC2016
