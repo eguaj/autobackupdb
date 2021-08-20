@@ -1,0 +1,5 @@
+Package: autobackupdb
+Version: 0.0.1
+Architecture: all
+Description:  AutoBackupDB tool
+ Automatic backup/dump of MySQL/PostgreSQL/Mongo databases.
