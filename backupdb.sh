@@ -40,6 +40,20 @@ function backup_pg {
 		return 1
 	fi
 	local GLOBAL_RET=0
+	printf "* Dumping pgsql schemas... "
+	(
+		set -e
+		local TMPDB
+		TMPDB=$(mktemp "${BACKUP_DIR}/tmp.schema-only.XXXXXX")
+		su postgres -c "pg_dumpall --schema-only" | gzip > "${TMPDB}"
+		mv "${TMPDB}" "${BACKUP_DIR}/pgsql.schema-only.sql.gz"
+	)
+	if [ $? -ne 0 ]; then
+		printf "Error: schema-only dump error!"
+		GLOBAL_RET=1
+	else
+		printf "Done.\n"
+	fi
 	for DBNAME in "${DB_LIST[@]}"; do
 		printf "* Dumping pgsql '%s'... " "${DBNAME}"
 		(
