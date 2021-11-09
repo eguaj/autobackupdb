@@ -145,6 +145,36 @@ function backup_mongo {
 	return $GLOBAL_RET
 }
 
+function backup_docker_images {
+	if ! command -v docker > /dev/null; then
+		return 0
+	fi
+	local IMAGE_LIST
+	mapfile -t IMAGE_LIST < <(docker images --format="{{.Repository}}:{{.Tag}}")
+	if [ $? -ne 0 ]; then
+		printf "Error: could not list docker images!\n"
+		return 1
+	fi
+	local GLOBAL_RET=0
+	local IMAGE
+	local IMAGE_FNAME
+	for IMAGE in "${IMAGE_LIST[@]}"; do
+		IMAGE_FNAME=$(echo "${IMAGE}" | sed 's:%:%25:g;s:/:%2f:g')
+		printf "* Saving docker image '%s'... " "${IMAGE}"
+		(
+			set -e
+			docker save "${IMAGE}" | gzip > "${BACKUP_DIR}/docker-image.${IMAGE_FNAME}.tar.gz"
+		)
+		if [ $? -ne 0 ]; then
+			printf "Error: docker save error on image '%s'!" "${IMAGE}"
+			GLOBAL_RET=1
+		else
+			printf "Done.\n"
+		fi
+	done
+	return $GLOBAL_RET
+}
+
 function backup_local {
 	local GLOBAL_RET=0
 	if [ -x "/usr/local/bin/local-backup" ]; then
@@ -186,6 +216,9 @@ function main {
 	(( RET = RET || $? ))
 
 	backup_mongo
+	(( RET = RET || $? ))
+
+	backup_docker_images
 	(( RET = RET || $? ))
 
 	backup_local
