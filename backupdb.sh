@@ -19,6 +19,12 @@ function backup_yum_list {
 	yum list installed --quiet > "${BACKUP_DIR}/yum.list"
 }
 
+function backup_apt_keys {
+	if command -v apt-key > /dev/null; then
+		apt-key exportall > "${BACKUP_DIR}/apt.keys"
+	fi
+}
+
 function backup_pkg_list {
 	if command -v dpkg > /dev/null; then
 		backup_dpkg_list
@@ -166,6 +172,9 @@ function main {
 	if [ -z "${GZIP}" ]; then
 		export GZIP="--rsyncable"
 	fi
+
+	backup_apt_keys
+	(( RET = RET || $? ))
 
 	backup_pkg_list
 	(( RET = RET || $? ))
