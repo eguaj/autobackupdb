@@ -20,12 +20,18 @@ function backup_yum_list {
 }
 
 function backup_apt_keys {
+	if [ -v "${NO_BACKUP_APT_KEYS}" ]; then
+		return 0
+	fi
 	if command -v apt-key > /dev/null; then
 		apt-key exportall > "${BACKUP_DIR}/apt.keys"
 	fi
 }
 
 function backup_pkg_list {
+	if [ -v "${NO_BACKUP_PKG_LIST}" ]; then
+		return 0
+	fi
 	if command -v dpkg > /dev/null; then
 		backup_dpkg_list
 	elif command -v yum > /dev/null; then
@@ -36,6 +42,9 @@ function backup_pkg_list {
 }
 
 function backup_pg {
+	if [ -v "${NO_BACKUP_PG}" ]; then
+		return 0
+	fi
 	if ! command -v pg_dump > /dev/null; then
 		return 0
 	fi
@@ -80,6 +89,9 @@ function backup_pg {
 }
 
 function backup_mysql {
+	if [ -v "${NO_BACKUP_MYSQL}" ]; then
+		return 0
+	fi
 	if ! command -v mysql > /dev/null; then
 		return 0
 	fi
@@ -114,6 +126,9 @@ function backup_mysql {
 }
 
 function backup_mongo {
+	if [ -v "${NO_BACKUP_MONGO}" ]; then
+		return 0
+	fi
 	if ! command -v mongo > /dev/null; then
 		return 0
 	fi
@@ -146,6 +161,9 @@ function backup_mongo {
 }
 
 function backup_docker_images {
+	if [ -v "${NO_BACKUP_DOCKER_IMAGES}" ]; then
+		return 0
+	fi
 	if ! command -v docker > /dev/null; then
 		return 0
 	fi
@@ -176,6 +194,9 @@ function backup_docker_images {
 }
 
 function backup_local {
+	if [ -v "${NO_BACKUP_LOCAL}" ]; then
+		return 0
+	fi
 	local GLOBAL_RET=0
 	if [ -x "/usr/local/bin/local-backup" ]; then
 		printf "* Running local-backup... "
