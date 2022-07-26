@@ -56,9 +56,9 @@ function backup_pkg_list {
 	if command -v dpkg > /dev/null; then
 		backup_dpkg_list
 	elif command -v yum > /dev/null; then
-		backup_rpm_list
-	elif command -v rpm > /dev/null; then
 		backup_yum_list
+	elif command -v rpm > /dev/null; then
+		backup_rpm_list
 	fi
 }
 
