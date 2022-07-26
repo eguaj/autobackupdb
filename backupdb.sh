@@ -7,6 +7,27 @@ BACKUP_DIR="/var/backupdb"
 shopt -s nullglob
 set -o pipefail
 
+function usage {
+	cat <<EOF
+Usage
+-----
+
+  $0 [options]
+
+Options
+-------
+
+  --no-backup-apt-keys
+  --no-backup-pkg-list
+  --no-backup-pg
+  --no-backup-mysql
+  --no-backup-mongo
+  --no-backup-docker-images
+  --no-backup-local
+
+EOF
+}
+
 function backup_dpkg_list {
 	dpkg -l > "${BACKUP_DIR}/dpkg.list"
 }
@@ -213,6 +234,51 @@ function backup_local {
 
 function main {
 	local RET=0
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--help|-h)
+				shift
+				usage
+				exit 0
+				;;
+			--no-backup-apt-keys)
+				shift
+				NO_BACKUP_APT_KEYS=1
+				;;
+			--no-backup-pkg-list)
+				shift
+				NO_BACKUP_PKG_LIST=1
+				;;
+			--no-backup-pg)
+				shift
+				NO_BACKUP_PG=1
+				;;
+			--no-backup-mysql)
+				shift
+				NO_BACKUP_MYSQL=1
+				;;
+			--no-backup-mongo)
+				shift
+				NO_BACKUP_MONGO=1
+				;;
+			--no-backup-docker-images)
+				shift
+				NO_BACKUP_DOCKER_IMAGES=1
+				;;
+			--no-backup-local)
+				NO_BACKUP_LOCAL=1
+				;;
+			*)
+				echo "Error: unknown option '$1'!" 1>&2
+				exit 1
+				;;
+			--)
+				shift
+				break
+				;;
+		esac
+	done
 
 	cd "${BACKUP_DIR}"
 	if [ $? -ne 0 ]; then
