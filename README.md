@@ -9,6 +9,8 @@ Supported databases:
 - mongo
 
 Also:
-- Backup list of installed packages (`dpkg -l`) to `${BACKUP_DIR}/dpkg.list`.
+- Backup list of installed packages (`dpkg -l`, `yum list installed`, `rpm -ql`).
 - Execute optional `/usr/local/bin/local-backup` script to trigger additional
   backup actions.
+- Backup apt-keys.
+- Backup Docker images.
