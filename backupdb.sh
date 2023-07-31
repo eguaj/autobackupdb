@@ -269,13 +269,13 @@ function main {
 			--no-backup-local)
 				NO_BACKUP_LOCAL=1
 				;;
-			*)
-				echo "Error: unknown option '$1'!" 1>&2
-				exit 1
-				;;
 			--)
 				shift
 				break
+				;;
+			*)
+				echo "Error: unknown option '$1'!" 1>&2
+				exit 1
 				;;
 		esac
 	done
