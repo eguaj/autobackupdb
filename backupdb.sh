@@ -150,12 +150,12 @@ function backup_mongo {
 	if [ -v "${NO_BACKUP_MONGO}" ]; then
 		return 0
 	fi
-	if ! command -v mongo > /dev/null; then
+	if ! command -v mongosh > /dev/null; then
 		return 0
 	fi
 	local DB_LIST
 	# shellcheck disable=SC2016
-	mapfile -t DB_LIST < <(mongo --quiet --eval  "printjson(db.adminCommand('listDatabases'))" | php -r '$r=json_decode(file_get_contents("php://stdin"),true);foreach($r["databases"]as$d){printf("%s\n",$d["name"]);};')
+	mapfile -t DB_LIST < <(mongosh --quiet --eval  "EJSON.stringify(db.adminCommand('listDatabases'))" | php -r '$r=json_decode(file_get_contents("php://stdin"),true);foreach($r["databases"]as$d){printf("%s\n",$d["name"]);};')
 	if [ $? -ne 0 ]; then
 		printf "Error: could not list Mongo's databases!\n"
 		return 1
